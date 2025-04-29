@@ -1,0 +1,60 @@
+
+(* --- PNC: Petri net initialization --- *)
+
+IF %mw100=0 THEN
+ %mw201:=1; %mw202:=0; %mw203:=0;
+ %mw100:=1;
+END_IF;
+
+(* --- PNC: Timed transitions --- *)
+
+MY_TON_1(IN := INT_TO_BOOL(%mw201) (*BOOL*),
+          PT := t#500ms (*TIME*),
+          Q => timer_output_flag (*BOOL*),
+          ET => my_time_1 (*TIME*));
+%mw101:= BOOL_TO_INT(timer_output_flag);
+MY_TON_2(IN := INT_TO_BOOL(%mw202) (*BOOL*),
+          PT := t#500ms (*TIME*),
+          Q => timer_output_flag (*BOOL*),
+          ET => my_time_2 (*TIME*));
+%mw102:= BOOL_TO_INT(timer_output_flag);
+MY_TON_3(IN := INT_TO_BOOL(%mw203) (*BOOL*),
+          PT := t#500ms (*TIME*),
+          Q => timer_output_flag (*BOOL*),
+          ET => my_time_3 (*TIME*));
+%mw103:= BOOL_TO_INT(timer_output_flag);
+
+(* --- PNC: Petri net loop code --- *)
+
+IF %mw101>0 AND %mw201>=1
+THEN
+ %mw201:=%mw201-1;
+ %mw202:=%mw202+1;
+END_IF;
+
+IF %mw102>0 AND %mw202>=1
+THEN
+ %mw202:=%mw202-1;
+ %mw203:=%mw203+1;
+END_IF;
+
+IF %mw103>0 AND %mw203>=1
+THEN
+ %mw203:=%mw203-1;
+ %mw201:=%mw201+1;
+END_IF;
+
+(* --- PNC: Output bits --- *)
+
+IF INT_TO_BOOL(%mw201)
+THEN SET(%q0.4.0);
+ELSE RESET(%q0.4.0);
+END_IF;
+IF INT_TO_BOOL(%mw202)
+THEN SET(%q0.4.1);
+ELSE RESET(%q0.4.1);
+END_IF;
+IF INT_TO_BOOL(%mw203)
+THEN SET(%q0.4.2);
+ELSE RESET(%q0.4.2);
+END_IF;

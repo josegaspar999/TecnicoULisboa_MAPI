@@ -1,0 +1,16 @@
+LIBRARY			APPEL
+
+DESCRIPTION		'APPEL.DLL - Exemple de chaînage de DLL'
+
+EXETYPE			WINDOWS
+
+CODE			PRELOAD MOVEABLE DISCARDABLE
+DATA			PRELOAD SINGLE
+
+HEAPSIZE		8192
+
+EXPORTS
+	WEP                     @1 RESIDENTNAME
+	PMFunction				@2
+	PMFunctionCopyright		@3
+	MainWndProc				@4

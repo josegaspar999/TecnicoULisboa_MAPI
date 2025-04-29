@@ -1,0 +1,17 @@
+LIBRARY			TEMPVAR
+
+DESCRIPTION		'TEMPVAR.DLL - Evolution avec Temporisations variables'
+
+EXETYPE			WINDOWS
+
+CODE			PRELOAD MOVEABLE DISCARDABLE
+DATA			PRELOAD SINGLE
+
+HEAPSIZE		8192
+
+EXPORTS
+	WEP                     @1 RESIDENTNAME
+	PMFunction				@2
+	PMFunctionCopyright		@3
+	MainWndProc				@4
+	About					@5

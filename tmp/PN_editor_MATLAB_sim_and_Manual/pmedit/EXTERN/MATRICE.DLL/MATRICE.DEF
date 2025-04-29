@@ -1,0 +1,16 @@
+LIBRARY			MATRICE
+
+DESCRIPTION		'MATRICE.DLL - Matrices d''incidence'
+
+EXETYPE			WINDOWS
+
+CODE			PRELOAD MOVEABLE DISCARDABLE
+DATA			PRELOAD SINGLE
+
+HEAPSIZE		8192
+
+EXPORTS
+	WEP                     @1 RESIDENTNAME
+	PMFunction				@2
+	PMFunctionCopyright		@3
+	MainWndProc				@4

@@ -1,0 +1,77 @@
+
+(* --- PNC: Petri net initialization --- *)
+
+IF %mw300=0 THEN
+ %mw401:=1; %mw402:=0; %mw403:=0; %mw404:=0;
+ %mw300:=1;
+END_IF;
+
+(* --- PNC: Map inputs --- *)
+
+%mw304 := BOOL_TO_INT( %m0 );
+%mw305 := BOOL_TO_INT( NOT(%m0) );
+
+(* --- PNC: Timed transitions --- *)
+
+MY_TON_1(IN := INT_TO_BOOL(%mw401) (*BOOL*),
+          PT := t#500ms (*TIME*),
+          Q => timer_output_flag (*BOOL*),
+          ET => my_time_1 (*TIME*));
+%mw301:= BOOL_TO_INT(timer_output_flag);
+MY_TON_2(IN := INT_TO_BOOL(%mw402) (*BOOL*),
+          PT := t#500ms (*TIME*),
+          Q => timer_output_flag (*BOOL*),
+          ET => my_time_2 (*TIME*));
+%mw302:= BOOL_TO_INT(timer_output_flag);
+MY_TON_3(IN := INT_TO_BOOL(%mw403) (*BOOL*),
+          PT := t#500ms (*TIME*),
+          Q => timer_output_flag (*BOOL*),
+          ET => my_time_3 (*TIME*));
+%mw303:= BOOL_TO_INT(timer_output_flag);
+
+(* --- PNC: Petri net loop code --- *)
+
+IF %mw304>0 AND %mw401>=1
+THEN
+ %mw401:=%mw401-1;
+ %mw404:=%mw404+1;
+END_IF;
+
+IF %mw301>0 AND %mw401>=1
+THEN
+ %mw401:=%mw401-1;
+ %mw402:=%mw402+1;
+END_IF;
+
+IF %mw302>0 AND %mw402>=1
+THEN
+ %mw402:=%mw402-1;
+ %mw403:=%mw403+1;
+END_IF;
+
+IF %mw303>0 AND %mw403>=1
+THEN
+ %mw403:=%mw403-1;
+ %mw401:=%mw401+1;
+END_IF;
+
+IF %mw305>0 AND %mw404>=1
+THEN
+ %mw404:=%mw404-1;
+ %mw401:=%mw401+1;
+END_IF;
+
+(* --- PNC: Output bits --- *)
+
+IF INT_TO_BOOL(%mw401)
+THEN SET(%m10);
+ELSE RESET(%m10);
+END_IF;
+IF INT_TO_BOOL(%mw402)
+THEN SET(%m11);
+ELSE RESET(%m11);
+END_IF;
+IF INT_TO_BOOL(%mw403)
+THEN SET(%m12);
+ELSE RESET(%m12);
+END_IF;

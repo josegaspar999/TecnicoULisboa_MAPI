@@ -1,0 +1,15 @@
+LIBRARY			X_STEP
+
+DESCRIPTION		'X_STEP.DLL - Evolution pas à pas'
+
+EXETYPE			WINDOWS
+
+CODE			PRELOAD MOVEABLE DISCARDABLE
+DATA			PRELOAD SINGLE
+
+HEAPSIZE		8192
+
+EXPORTS
+	WEP                     @1 RESIDENTNAME
+	PMFunction				@2
+	PMFunctionCopyright		@3

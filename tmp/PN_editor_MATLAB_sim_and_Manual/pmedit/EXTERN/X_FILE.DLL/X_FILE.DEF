@@ -1,0 +1,15 @@
+LIBRARY			X_FILE
+
+DESCRIPTION		'X_FILE.DLL - Evolution pas à pas - Réseaux à files'
+
+EXETYPE			WINDOWS
+
+CODE			PRELOAD MOVEABLE DISCARDABLE
+DATA			PRELOAD SINGLE
+
+HEAPSIZE		8192
+
+EXPORTS
+	WEP                     @1 RESIDENTNAME
+	PMFunction				@2
+	PMFunctionCopyright		@3

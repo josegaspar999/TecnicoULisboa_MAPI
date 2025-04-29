@@ -1,0 +1,112 @@
+//Microsoft App Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+#ifdef APSTUDIO_INVOKED
+//////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDI_MAIN                ICON    DISCARDABLE     "MAIN.ICO"
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU MENU DISCARDABLE 
+BEGIN
+    MENUITEM "&Exécute",                    ID_EXECUTE
+    MENUITEM "&Stop",                       ID_STOP
+    MENUITEM "&About",                      ID_ABOUT
+    MENUITEM "&Quit",                       ID_QUITTER
+END
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUT DIALOG DISCARDABLE  0, 0, 242, 168
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 10, "Arial"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,96,150,50,14
+    CTEXT           "EVOLUTION AVEC TEMPORISATIONS DE PLACES VARIABLES",
+                    IDC_STATIC,11,6,220,8
+    LTEXT           "L'attribut Variable de la place doit \352tre coch\351. La temporisation est fonction du nombre x de jetons pr\351sents dans certaines places.",
+                    IDC_STATIC,5,25,216,18
+    LTEXT           "L'attribut Temporisation de la place doit comporter deux ou trois champs s\351par\351s par des points virgule.",
+                    IDC_STATIC,5,50,217,19
+    LTEXT           "Le premier champ est une \351quation du type Ax+B.",
+                    IDC_STATIC,5,75,209,8
+    LTEXT           "Le second champ est la liste des places dont d\351pend la temporisation (places s\351par\351es par des espaces).",
+                    IDC_STATIC,5,90,235,20
+    LTEXT           "Le dernier champ (facultatif) est une temporisation minimale constante.",
+                    IDC_STATIC,5,113,237,9
+    LTEXT           "Exemple : 5x+3;p2 p5;10",IDC_STATIC,23,128,78,8
+END
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APPNAME             "Variable temporisations"
+    IDS_ATTENTE             "[Waiting]"
+    IDS_RUNNING             "[Running]"
+END
+
+
+#ifndef APSTUDIO_INVOKED
+////////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

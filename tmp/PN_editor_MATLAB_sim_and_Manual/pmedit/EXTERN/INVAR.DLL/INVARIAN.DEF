@@ -1,0 +1,16 @@
+LIBRARY			INVARIAN
+
+DESCRIPTION		'INVARIAN.DLL - Calcul des Invariants'
+
+EXETYPE			WINDOWS
+
+CODE			PRELOAD MOVEABLE DISCARDABLE
+DATA			PRELOAD SINGLE
+
+HEAPSIZE		8192
+
+EXPORTS
+	WEP                     @1 RESIDENTNAME
+	PMFunction				@2
+	PMFunctionCopyright		@3
+	MainWndProc				@4

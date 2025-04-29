@@ -1,0 +1,8 @@
+
+Do not write files here:
+
+- this is a temporary folder where files are written / read automatically
+
+- files placed here by hand may be deleted
+
+May2022 J. Gaspar

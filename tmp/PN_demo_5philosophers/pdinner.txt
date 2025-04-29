@@ -1,0 +1,27 @@
+
+p1	think1
+p2	eat1
+p3	think2
+p4	eat2
+p5	think3
+p6	eat3
+p7	think4
+p8	eat4
+p9	think5
+p10	eat5
+p11	fork51
+p12	fork12
+p13	fork23
+p14	fork34
+p15	fork45
+
+t1	start1
+t2	stop1
+t3	start2
+t4	stop2
+t5	start3
+t6	stop3
+t7	start4
+t8	stop4
+t9	start5
+t10	stop5

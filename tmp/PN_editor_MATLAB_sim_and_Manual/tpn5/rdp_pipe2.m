@@ -1,0 +1,249 @@
+function [Pre, Post, M0, pnInfo]= rdp_pipe2( fname, options )
+%
+% Read a Petri net from a PIPE2 XML file
+%
+% Usage:
+% [Pre, Post, M0]= rdp_pipe2( fname )
+% [Pre, Post, M0]= rdp_pipe2( fname, options )
+%
+% Input:
+% fname : string : name of a file saved by PIPE2 as XML
+% options: struct: (facultative)
+%
+% Output:
+% Pre : NxM : D- of a Petri net incidence matrix D, Pre=-min(D,0)
+% Post: NxM : D+ of a Petri net incidence matrix D, Post=max(D,0),
+%             D=Post-Pre, N places, M transitions
+% M0  : Nx1 : initial marking
+
+% April 2019, J. Gaspar
+
+if nargin<1
+    if exist('rdp_pipe2_tst.m','file')
+        rdp_pipe2_tst(3); return
+    else
+        error('Please specify an input filename as a first argument');
+    end
+end
+if nargin<2
+    options= [];
+end
+if isnumeric(fname) && fname==-1
+    Pre= token_strings;
+    return
+end
+
+[Pre, Post, M0, pnInfo]= rdp_pipe2_main( fname, options );
+
+return; % end of main function
+
+
+function [Pre, Post, M0, pnInfo]= rdp_pipe2_main( fname, options )
+
+% load file
+text_search( 'ini_fname', fname );
+
+% keep only interesting lines; 1 line = 1 place, 1 transition or 1 arc
+listStrings= token_strings;
+strTokPlace= listStrings{1};
+strTokTrans= listStrings{3};
+strTokArc  = listStrings{5};
+ret= text_search( 'find_all_strings', listStrings );
+ret= text_search( 'get_lines_columns', ret );
+text_search( 'ini_txt_lines', ret );
+
+% get place ids
+listPlaces= {};
+text_search('ini');
+while text_search( 'find_str', strTokPlace )
+    ret= text_search( 'inline_s1s2', {'id="','"'} );
+    if isfield(options, 'debug') && options.debug
+        fprintf(1, '%s\n', text_search( 'get_line' ) );
+        fprintf(1, '%s\n', ret );
+    end
+    listPlaces{end+1,1}= ret;
+end
+if ~isfield(options,'sortByNum') || (options.sortByNum==1)
+    % default to resort places by their number
+    % (PIPE2 sorts by string p0 p1 p10 p2 ... while we want p0 p1 p2 ...)
+    listPlaces= sort_by_number( listPlaces );
+end
+
+% get transition ids
+listTransitions= {};
+text_search('ini');
+while text_search( 'find_str', strTokTrans )
+    ret= text_search( 'inline_s1s2', {'id="','"'} );
+    if isfield(options, 'debug') && options.debug
+        fprintf(1, '%s\n', text_search( 'get_line' ) );
+        fprintf(1, '%s\n', ret );
+    end
+    listTransitions{end+1,1}= ret;
+end
+if ~isfield(options,'sortByNum') || (options.sortByNum==1)
+    % default to resort transitions by their number
+    % (PIPE2 sorts by string t0 t1 t10 t2 ... while we want t0 t1 t2 ...)
+    listTransitions= sort_by_number( listTransitions );
+end
+
+% get arc ids
+listArcs= {};
+text_search('ini');
+while text_search( 'find_str', strTokArc )
+    ret= text_search( 'inline_s1s2', {'id="','"'} );
+    if isfield(options, 'debug') && options.debug
+        fprintf(1, '%s\n', text_search( 'get_line' ) );
+        fprintf(1, '%s\n', ret );
+    end
+    listArcs{end+1,1}= ret;
+end
+
+% foreach place, get initial marking (conv marking to number)
+for i=1:size(listPlaces,1)
+    text_search('ini');
+    text_search( 'find_str', ['id="' listPlaces{i,1} '"'] );
+    text_search( 'find_str', '<initialMarking>' );
+    ret1= text_search( 'inline_s1s2', {'<value>','</value>'} );
+    listPlaces{i,2}= ret1;
+    listPlaces{i,3}= get_num( ret1, 1 );
+end
+
+% foreach arc, get source and target ids, and get weight
+for i=1:size(listArcs,1)
+    text_search('ini');
+    text_search( 'find_str', ['id="' listArcs{i,1} '"'] );
+    % get arc source
+    ret1= text_search( 'inline_s1s2', {'source="','"'} );
+    listArcs{i,2}= ret1;
+    % get arc target
+    ret2= text_search( 'inline_s1s2', {'target="','"'} );
+    listArcs{i,3}= ret2;
+    % get arc weight
+    ret3= text_search( 'inline_s1s2', {'<value>','</value>'} );
+    listArcs{i,4}= ret3; ret4= get_num( ret3, 1 );
+    listArcs{i,5}= ret4;
+    % match arc source and dest ids to place or transition ids
+    % if source is a place, then D(i,j)= -arcWeight
+    % if source is a transition, then D(i,j)= +arcWeight
+    ijw= arc2incidence( listPlaces, listTransitions, ret1, ret2, ret4 );
+    listArcs{i,5}= ijw;
+end
+
+% create Pre, Post, M0
+M0= [listPlaces{:,3}]';
+Pre= zeros( size(listPlaces,1), size(listTransitions,1) );
+Post= Pre;
+ijw= reshape([listArcs{:,5}]', 3,[])';
+for i= 1:size(ijw,1)
+    w= ijw(i,3);
+    if w>0
+        Post(ijw(i,1), ijw(i,2))= w;
+    else
+        Pre(ijw(i,1), ijw(i,2))= -w;
+    end
+end
+
+% show all info
+if isfield(options, 'debug') && options.debug
+    listPlaces
+    listTransitions'
+    listArcs
+    M0'
+    Post
+    Pre
+    D= Post-Pre
+end
+
+% return info
+pnInfo= struct('listPlaces',{listPlaces}, ...
+    'listTransitions',{listTransitions}, ...
+    'listArcs',{listArcs}, ...
+    'Pre',Pre, 'Post',Post, 'M0',M0);
+
+return
+
+
+function listStrings= token_strings
+% strings to use as markers to find information
+listStrings= {
+    '<place ',      '</place>', ...
+    '<transition ', '</transition>', ...
+    '<arc ',        '</arc>'
+    };
+
+
+function n= get_num(str, cnt)
+ind= find('0'<=str & str<='9');
+if isempty(ind)
+    warning(['No number found in: ' str]);
+    n= 0;
+    return
+end
+n= sscanf(str(ind(1):end), '%d');
+if nargin>=2
+    n= n(1:cnt);
+end
+
+
+function ijw= arc2incidence( listPlaces, listTransitions, ...
+    srcId, dstId, arcWeight )
+% ijw= [indPlace, indTrans, weight]
+
+i1= isInList( listPlaces, srcId );
+i2= isInList( listPlaces, dstId );
+j1= isInList( listTransitions, srcId );
+j2= isInList( listTransitions, dstId );
+
+if i1 && j2
+    % place to transition
+    ijw= [i1 j2 -arcWeight];
+elseif i2 && j1
+    % transition to place
+    ijw= [i2 j1  arcWeight];
+else
+    fprintf('** unexpected i1=%d i2=%d j1=%d j2=%d\n', i1,i2,j1,j2);
+    error('arc not p->t and not t->p')
+end
+
+
+function ret= isInList( mylist, str )
+ret= 0;
+for i=1:size(mylist,1)
+    if strcmp(str, mylist{i,1})
+        ret= i;
+        break
+    end
+end
+
+
+function y= sort_by_number( x0 )
+% tmp list
+x= x0;
+
+% find max number
+maxNum= -inf;
+for i=1:length(x)
+    str= keep_digits( x{i} );
+    if ~isempty(str) && str2num(str)>maxNum
+        maxNum= str2num(str);
+    end
+end
+
+% redefine strings in list x
+cstr= ['%0' num2str(length(num2str(maxNum))) 'd'];
+for i=1:length(x)
+    x{i}= sprintf(cstr, str2num(keep_digits(x{i})));
+end
+
+% sorted output list y
+[~,ind]= sort(x);
+if size(x,1)<size(x,2)
+    y= {x0{ind}};
+else
+    y= {x0{ind}}';
+end
+
+
+function str2= keep_digits( str )
+ind= find('0'<=str & str<='9');
+str2= str(ind);

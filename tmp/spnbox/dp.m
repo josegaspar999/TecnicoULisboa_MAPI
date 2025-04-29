@@ -1,0 +1,828 @@
+function [Lf, Bf, L0f, B0f, how] = dp(DM, DP, Tuc, Tuo, T, L, B, L0, B0, opt)
+
+% DP - Create a Petri net supervisor for deadlock prevention
+%
+% By selecting the appropriate option, this function generates a supervisor
+% for
+%  - global-deadlock prevention (default option)
+%  - liveness enforcement
+%  - T-liveness enforcement
+% 
+% The format is as follows:
+%
+% [L, b, L0, b0, how] = dp(pn, T, L, B, L0, B0, opt)
+%
+% where the simpler formats
+%
+% [L, b, L0, b0, how] = dp(pn)
+% [L, b, L0, b0, how] = dp(pn, T)
+% [L, b, L0, b0, how] = dp(pn, T, L, B)
+% [L, b, L0, b0, how] = dp(pn, T, L, B, L0, B0)
+%
+% can also be used. pn is a Petri net object generated with GETPN. T is
+% the set of transitions to be made live in the case of T-liveness enforcement.
+% By default T equals the total set of transitions. L and B specify marking 
+% constraints already enforced. L0 and B0 specify initial-marking constraints. 
+% opt represents the options input:
+% opt = 8*l+4*k+2*i+j, where j = (0)/1 turns (OFF)/ON displaying 
+% messages (default is 1); k = (0)/1 turns (OFF)/ON printing log files 
+% (default is ON); l = 0(1) for deadlock prevention/((T-)liveness enforcement).
+%
+% The output are (admissible) constraints that are to be enforced on 
+% the marking vector. For all initial marking vectors Mo such
+% that L*Mo >= b and L0*Mo >= b0, the Petri net supervised
+% with the constraints (L,b) (see LINENF) is live. 
+%
+% 'how' is set to 'impossible' if deadlock cannot be avoided
+% in the given Petri net. Otherwise 'how' is set to 'ok'.
+%
+% Other formats are:
+%
+% [L, b, L0, b0, how] = dp(D)
+% [L, b, L0, b0, how] = dp(D^-, D^+)
+% [L, b, L0, b0, how] = dp(D^-, D^+, Tuc, Tuo)
+% [L, b, L0, b0, how] = dp(D^-, D^+, Tuc, Tuo, T)
+% [L, b, L0, b0, how] = dp(D^-, D^+, Tuc, Tuo, T, L, B)
+% [L, b, L0, b0, how] = dp(D^-, D^+, Tuc, Tuo, T, L, B, L0, B0)
+% [L, b, L0, b0, how] = dp(D^-, D^+, Tuc, Tuo, T, L, b, L0, b0, opt)
+%
+% The input are the incidence matrices of the Petri net that 
+% is to be supervised; rows correspond to places and columns
+% to transitions. The optional arguments Tuc and Tuo list the 
+% uncontrollable and unobservable transitions, specified by 
+% their column number in the incidence matrix. 
+
+% Written by Marian V. Iordache, miordach@nd.edu
+
+% Marian V. Iordache, March 1999
+%
+% Revised on September 2000 and January 2002.
+%
+% Other changes:
+%
+% On July 1, 2002: corrected the problem causing dp to write incomplete
+%                  data in the log file dp.dat.
+
+if ~strcmp(class(DM),'struct')
+   if nargin < 11
+      X = [];
+      if nargin < 10
+         opt = 5;
+         if nargin < 9
+            L0 = []; B0 = []; 
+            if nargin < 7
+               L = []; B = [];
+               if nargin < 5,
+                  T = [];
+                  if nargin < 4, 
+                     Tuo = [];
+                     if nargin < 3
+                        Tuc = [];
+                     end
+                  end
+               end
+            end
+         end
+      end
+   end
+   if nargin == 1, [DM, DP] = d2dd(DM); end
+else
+    % pn,  T,   L,   B, L0, B0, opt,  X
+    % DM, DP, Tuc, Tuo,  T,  L,   B, L0, B0, opt
+    mpn = DM;
+    if nargin > 7, X = L0; end
+    if nargin > 6, opt = B; end
+    if nargin > 5, L0 = T; B0 = L; end
+    if nargin > 3, L = Tuc; B = Tuo; end
+    if nargin > 1, T = DP; end
+    
+    if nargin < 8, X = []; end
+    if nargin < 7, opt = 5; end
+    if nargin < 6, L0 = []; B0 = []; end
+    if nargin < 4, L = []; B = []; end
+    if nargin < 2, T = []; end
+    DM = mpn.Dm; DP = mpn.Dp; Tuc = mpn.Tuc; Tuo = mpn.Tuo;
+end
+
+[m,n] = size(DM); % m number of places, n number of transitions
+
+m0 = m; % constants representing the size of the target 
+n0 = n; % Petri net
+
+if isempty(L0), L0 = zeros(0,m0); end
+if isempty(L),   L = zeros(0,m0); end
+if isempty(X), X = [];  end
+if isempty(T), T = 1:n; end
+t = zeros(1,n); t(T) = 1; T = find(t); % ensures distinct entries in T
+LM = L; BM = B; LM0 = L0; BM0 = B0;
+
+% Setting the options
+
+vrb = rem(opt,2);
+remake_allowed = ~rem(floor(opt/2),2); % not used; available for future options
+print_log = rem(floor(opt/4),2);
+dptype = floor(opt/8) ~= 0;                % 0 - means deadlock prevention
+dptype = dptype + dptype*(length(T) < n);  % 1 - liveness enforcement
+                                           % 2 - T-liveness enforcement
+
+r = chk_data(DM, DP, L, B, L0, B0); % checks whether input data is valid
+if r == 0 % if empty data
+    Lf = L; Bf = B; L0f = L0; B0f = B0; how = 'ok';
+    return
+end
+
+if vrb
+    hdl = xiniti('DP status'); % opens the text window titled 'DP status'; defined in this file 
+    ics = initcurrentstate(hdl,dptype); % graphics function defined in this file
+end
+
+% Open output files
+
+if print_log
+    fid = fopen('dp.log','w');
+    fxd = fopen('dp.dat','w');
+    if fid == -1 | fxd == -1, print_log = 0; end
+end
+if print_log, 
+   fprintf(fid,'\n%s -- DP.LOG -- Generated by DP\n', datestr(now));
+   fprintf(fxd,'\n%s -- DP.DAT -- Generated by DP\n', datestr(now));
+end
+
+% Check that the input constraints are consistent
+
+res = chk_cons([L; L0], [B; B0], [], [],'');
+if isempty(res)
+    trm = 1;  % inconsistent set of constraints, so terminate
+    if print_log
+        fprintf(fid,'\n\nInconsistent set of constraints. Relax (L, B) and (L0, B0).');
+    end       
+    if vrb,
+        fprintf('\n\nInconsistent set of constraints. Relax (L, B) and (L0, B0).\n');
+        % !!! ADD comment to the text window !!!
+    end
+end
+
+% START PROCEDURE
+
+state = init_state;  % function defined in this file
+state.dptype = dptype; % state is used by final_print() to write appropriate comments to the output file
+state.uncontro = ~isempty([Tuc(:); Tuo(:)]);
+state.incon = ~isempty([L; L0]);
+
+restart = 0; firstpass = 1; rn = 0; % rn - is the pass number
+while restart | firstpass 
+    
+   restart = 0; rn = rn + 1;
+   if rn > 1, fprintf(fid,'\n ====================== RUN %d ========================\n', rn); end
+   Dm = DM;  % current D^- in the supervised Petri net
+    Dp = DP;  % current D^+
+    DI = DP-DM; L = LM; B = BM; L0 = LM0; B0 = BM0;
+    
+    opl = 1:m0;  % opl - denotes the original places
+    ipl = opl;   % ipl - denotes the set of independent marking places
+    % (typically, not control places)
+    dpl = [];    % dpl - denotes the set of dependent marking places
+    % (control places are such places)
+    G = [];
+    M = zeros(0,m0);  % the marking of dpl is defined by:
+    % m(dpl) = M*m(ipl) - G
+    X = X(find(X <= n0));
+    
+    if isempty(L) == 0
+        [Dm, Dp] = supervis(Dm, Dp, L);
+        [m,n] = size(Dm);
+        dpl = m0+1:m;
+        M = L; G = B; % update M and G for dpl
+    end
+    
+    incon = ~(isempty(L) & isempty(L0)); % incon: initial constraints exist
+    consis =  incon; % consis is checked in order to decide whether to do a 
+    % feasability test. This simple expression for consis could be enhanced
+    % in order to do less often the feasibility test.
+    
+    [m, n] = size(Dm);
+    UsefulPlaces = 1:m; 
+    
+    % UsefulPlaces is the set of places (updated in every iteration) 
+    % specifying the set of places that should be considered for
+    % siphon computation.
+
+    status = 'ok'; perm = 1; % perm is set to zero if the permissivity 
+                             % property cannot be guaranteed
+    if print_log, 
+       if firstpass, fprintf(fxd,'\nStarting with the Petri net:');
+       else, fprintf(fxd,'\n ================= RUN NO. %d ================\n', rn); end
+       print_state(m, n, m0, ipl, dpl, M, G, X, fid, fxd, Dm, Dp); 
+    end
+
+    if vrb
+       asbnmessage(ics, dptype, rn);% prints a message; the function is defined in this file 
+    end
+    
+    % Transform the Petri net to a PT-ordinary Petri net
+
+    [D, Dm, Dp, M, L0, L, ipl] = msplit(Dm, Dp, [], M, L0, L, ipl, dpl);
+    
+    if dptype % if liveness/T-liveness enforcement
+        
+        % Transform the Petri net to an asymmetric-choice net
+        
+        [D, Dm, Dp, M, L0, L, ipl] = pn2acpn(Dm, Dp, [], M, L0, L, ipl, dpl);
+        
+        % Compute a T-minimal active subnet
+        
+        [Dcm, Dcp, Drm, Drp, TA, state.unique] = tactn(Dm, Dp, T, X);
+        
+        % Check for the cases when the task is impossible
+        
+        [m, n] = size(D); tmp = ones(1,n); 
+        tmp(TA) = 0; % tmp: the transitions not in the subnet
+        %if firstpass
+        if ~isempty(find(tmp(T))) % Are all transitions of T in the subnet?
+           state.anetfail = 1; % state.anetfail must never be reset to zero!
+           if dptype == 2 & firstpass
+              state.noTlive = 1;
+              %    state = [state,'noTlive'];% T-liveness enforcement impossible
+           elseif dptype == 1 & firstpass
+              state.nolive = 1;
+              %    state = [state,'nolive'];% liveness enforcement impossible
+           end
+        end
+        
+    else % if deadlock prevention
+    
+        % Compute the maximal active subnet
+        
+        [Dcm, Dcp, Drm, Drp, TA, state.unique] = actn(Dm, Dp, X); 
+        
+        [m, n] = size(D); tmp = ones(1,n); 
+        tmp(TA) = 0; % tmp: the transitions not in the subnet
+        if ~isempty(find(tmp)) % are any transitions not in the max. active subnet?
+           state.anetfail = 1; % state.anetfail must never be reset
+        end
+    end
+    %[m, n] = size(D); tmp = ones(1,n); tmp(TA) = 0; 
+    X = find(tmp); % X - the set of transitions not in the active subnet
+    
+    % Check for the case when the task is impossible
+    
+    if isempty(TA), 
+       trm = 1; 
+       if firstpass,
+          status = 'impossible';
+       else
+          status = 'failed';
+       end
+       incon = 0; % DELETE incon!!!!
+    end     
+    
+    TSIPH = zeros(m,0);
+    % TSIPH: the set of minimal active siphons found in all iterations
+    % It is useful to avoid repeated computations of the same siphons.
+    
+    It = 1; uci = 0;
+    trm = 0;
+    
+    % --- ITERATION LOOP ---
+    
+    while ~trm
+        
+        upd = 1;
+        if print_log
+           if firstpass, fprintf(fxd,'\nIteration %d ', It);
+           else, fprintf(fxd,'\nRun %d, iteration %d ', rn, It); end
+           print_state(m, n, m0, ipl, dpl, M, G, X, fid, fxd, Dm, Dp); 
+        end
+        
+        if vrb > 0, % function below defined in this file
+            printmessage('Computing the minimal active siphons  ... ', It, rn, ics); 
+        end
+        
+        indP = find(sum((Dcm+Dcp),2)); % the nonzero rows of the a-net.
+        indT = find(sum((Dcm+Dcp),1)); % the nonzero columns
+        plc = zeros(1,m); iplc = plc;
+        plc(UsefulPlaces) = 1; iplc(indP) = 1; iplc = iplc & plc;
+        plc = find(iplc); 
+        % plc are places to be considered for siphon computation
+        
+        [f, tsize] = size(TSIPH);
+        TSIPH = [TSIPH; zeros(m-f,tsize)];
+        % remove from TSIPH the siphons not active for the current active sbn.
+        tidx  = find(sum(TSIPH(indP,:),1));
+        TSIPH = TSIPH(:, tidx); 
+        
+        % find the minimal active siphons
+        
+        if firstpass, ics.string = sprintf('Iteration %d: Computing the minimal active siphons: ', It);
+        else, ics.string = sprintf('Run %d, iteration %d: Computing the minimal active siphons: ', rn, It); end
+        if ~vrb, xvrb = 0; else xvrb = ics; end
+        
+        [TSIPH, ST] = asiph(Dm, Dp, plc, TSIPH, Dcm, Dcp, xvrb); %pn2ar(Dm,Dp);
+        
+        % select the minimal siphons that are useful
+        
+        ind = find(sum(ST(UsefulPlaces,:), 1)); 
+        % ST are all active minimal siphons found so far
+        S = ST(:,ind); % the new minimal active siphons
+        UsefulPlaces = [];
+        
+        [p,k] = size(S); numsiph = k;
+        [flgg,flxx]=is_siph(Dm,Dp,S);if flxx, error('Siphon computation error');end
+        
+        %if vrb > 0,
+        %   bck(7); fprintf(': ');
+        %   if ~k, fprintf('no new minimal active siphon found');
+        %   else fprintf('%d new minimal active siphon', k);  end
+        %   if k > 1, fprintf('s'); end
+        %end
+        
+        if isempty(S), break; end    % Termination if no new siphon exists.
+        %if vrb > 0, fprintf('\nIteration %d: ',It); end
+        
+        if print_log, 
+           if firstpass, 
+              fprintf(fid,'\nIteration %d - %d new min. siphons', It, k);  
+           else 
+              fprintf(fid,'\nRun no. %d, iteration %d - %d new min. siphons', rn, It, k); 
+           end
+            print_state(m, n, m0, ipl, dpl, M, G, X, fid, -1, Dm, Dp); end
+        
+        ncpl = []; % the new control places
+        
+        % operations performed for each minimal active siphon
+        
+        for i = 1:k
+            if vrb,
+                s1 = sprintf('working on siphon %d of %d ...', i, k);
+                printmessage(s1, It, rn, ics);
+            end
+            si = S(:,i) ~= 0; sli = find(si); 
+            v = si(dpl)'*M; 
+            if isempty(v)
+                l = si(ipl)'; b = 1;                      
+            else
+                l = si(ipl)' + v; b = G'*si(dpl) + 1;
+            end
+            rs = chk_cons([L; L0], [B; B0], l, b, '');
+            if isempty(rs) == 0  % if{the constraint is not redundant}
+                apl = find(sum(Dcm+Dcp,2))'; 
+                [a, adm] = admcon(si,Dm,Dp,ipl,dpl,opl,apl,n0+1:n,M,Tuc,Tuo,DI);
+                if ~adm
+                    X = [X, find(sum(Dm(sli,:),1))]; uci = 1;
+                    if print_log, print_cons([], [], sli, -2, fid, m, ipl, 1); end
+                    perm = 0; upd = 0;
+                else
+                    % first decide whether this is a (L,b) or (L0, b0) constraint
+                    [Dfm, Dfp] = supervis(Dm, Dp, a');                
+                    usfl=sum(xor(Dfm(m+1,:),(Dfm(m+1,:) & sum(Dfp([sli;m+1],:),1))));
+                    v = a(dpl)'*M; 
+                    if isempty(v)
+                        l = a(ipl)'; b = 1;
+                    else
+                        l = a(ipl)' + v; b = G'*a(dpl) + 1;
+                    end
+                    res = 1; 
+                    if consis, res = chk_cons([L; L0; l],[B; B0; b], [], [], ''); end % consistency check
+                    xx = ~(sum((a ~= 0) ~= si));
+                    perm = perm*xx; xx = 2*(~xx);
+                    if (usfl | sum(abs(a-si))) & ~isempty(res) %room for improvement
+                        dpl = [dpl, m+1];
+                        ncpl = [ncpl, m+1];
+                        Dm = Dfm;
+                        Dp = Dfp;
+                        m = m+1; 
+                        UsefulPlaces = [UsefulPlaces, m];
+                        L = [L; l]; B = [B; b];
+                        M = [M; l]; G = [G; b];
+                        S = [S; zeros(1, k)];
+                        if print_log, print_cons(l, b, sli, m, fid, m, ipl,xx); end
+                    elseif ~isempty(res)
+                        L0 = [L0; l]; B0 = [B0; b];
+                        if print_log, print_cons(l, b, sli, [], fid, m, ipl,xx);end
+                    else
+                        X = [X, find(sum(Dm(sli,:),1))]; upd = 0;
+                        if print_log, print_cons([], [], sli, -1, fid, m, ipl, 1); end
+                        perm = 2*(perm > 1); restart = 1; trm = 1;% uci = 1; 
+                    end
+                end
+            else  % if the constraint is redundant
+                if print_log, print_cons([], [], sli, -1, fid, m, ipl); end
+            end   % end of if{the constraint not redundant}
+        end
+        
+        f = zeros(1, m); f(ncpl) = 1; ncpl = f;
+        [D, Dm, Dp, M, L0, L, ipl] =  msplit(Dm, Dp, [], M, L0, L, ipl, dpl);
+        if dptype
+            [D, Dm, Dp, M, L0, L, ipl] = pn2acpn(Dm, Dp, ncpl, M, L0, L, ipl, dpl);
+        end
+        [m, n] = size(D);
+        
+        % recomputation or update of the active subnet
+        
+        if vrb,  str = 'Updating the active subnet ...';
+            printmessage(str,It,rn,ics);
+            %fprintf(str); 
+         end
+         unique = state.unique;
+        if dptype
+            if upd
+                [Dcm, Dcp, Drm, Drp, TA] = tactn(Dm, Dp, T, X, Dcm, Dcp); % update 
+            else
+                [Dcm, Dcp, Drm, Drp, TA, state.unique] = tactn(Dm, Dp, T, X); % recomputation 
+            end
+         else
+            if upd
+               [Dcm, Dcp, Drm, Drp, TA] = actn(Dm, Dp, X, Dcm, Dcp, upd);  
+            else
+               [Dcm, Dcp, Drm, Drp, TA, state.unique] = actn(Dm, Dp, X, Dcm, Dcp, upd); 
+            end
+         end
+        X = find(~sum(Dcm+Dcp,1)); % this updates X.
+        if isempty(TA), 
+           trm = 1; restart = 0; status = 'failed';
+           if firstpass & ~uci & (~dptype | unique), status = 'impossible'; end 
+        end
+        
+        if upd == 0
+            UsefulPlaces = [ipl(find(ipl<=m0)), dpl];
+        end
+        It = It + 1;
+     end     % END WHILE
+     firstpass = 0;
+end
+
+L = L(:,1:m0); L0 = L0(:,1:m0);
+[mf, nf] = size(L); [mf0, nf0] = size(L0);
+Lf = L; Bf = B; L0f = L0; B0f = B0;
+
+if ~isempty(TA)
+    if vrb > 0, 
+        %fprintf('\nRemoving redundant constraints ... ');
+        printmessage('Removing redundant constraints ... ', 0, rn, ics);
+    end
+    [Lf, Bf, L0f, B0f, usfl] = reduceLB(L, B, L0, B0, 0);
+    %if vrb > 0, 
+    %    fprintf('%d removed, %d remaining.', usfl, mf+mf0-usfl);
+    %end
+    state.usfl = usfl;
+end
+how = status;
+state.perm = perm;
+if print_log, 
+   final_print(Lf, Bf, L0f, B0f, status, fid, TA, T, state); 
+   fclose(fid); fclose(fxd);
+   if vrb > 0, fprintf('\nOutput written to dp.log and dp.dat\n'); end
+end
+
+if ishandle(ics.ghdl)
+   close(ics.ghdl);
+end
+
+
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+function [Lxf, Bxf, Lx0f, Bx0f, usfl] = reduceLB(L, B, L0, B0, vrb)
+
+Lx = [L; L0];
+Bx = [B; B0];
+ 
+[Lx, Bx, indf] = reduce(Lx, Bx, vrb);
+ 
+[m1, n1] = size(L);
+[m2, n2] = size(L0);
+ 
+ind1 = indf(find(indf <= m1));
+ind2 = indf(find(indf > m1)) - m1;
+ 
+Lxf = L(ind1, :);
+Bxf = B(ind1, :);
+Lx0f = L0(ind2, :);
+Bx0f = B0(ind2, :);
+
+usfl = (m1+m2 - length([ind1; ind2])); % usfl not 0 iff (L,B) were reduced.
+                            % ((L,B) are the active constraints)
+
+
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+
+function print_state(m, n, m0, ipl, dpl, M, G, X, fid, fxd, Dm, Dp)
+
+fprintf(fid,'\nThe Petri net has %d places and %d transitions',m,n);
+fprintf(fid,'\nThe current active subnet excludes the transitions %s',fvpr(X,2));
+
+mspl = ipl(find(ipl>m0)); mcnt = dpl(find(dpl>m0)); 
+nspl = length(mspl); ncpl = length(mcnt);
+fprintf(fid,'\n  %d original places: %s', m0, fvpr(1:m0,2));
+if nspl == 1
+    fprintf(fid,'\n  one split place: %s', fvpr(mspl,2));
+elseif nspl > 1, 
+    fprintf(fid,'\n  %d split places: %s', nspl, fvpr(mspl,2));
+end
+if ncpl == 1
+    fprintf(fid,'\n  one control place: %s', fvpr(mcnt,2));
+elseif ncpl > 1
+    fprintf(fid,'\n  %d control places: %s', ncpl, fvpr(mcnt,2));
+end
+fprintf(fid,'\n');
+
+u = length(dpl);
+N = zeros(u, m);
+N(1:u,ipl) = M;   
+% N is used instead of M such that the index produced by avpr is correct
+for zi = 1:length(dpl)
+    strt = avpr(N(zi,:));
+    fprintf(fid, '\n  %d --> %s >= %d', dpl(zi), strt, G(zi));
+end    
+fprintf(fid,'\n');
+if fxd > 0
+   fprintf(fxd,'\n');
+   pn2ar(Dm, Dp, [], [], fxd);
+   fprintf(fxd,'\n');
+end
+
+
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+
+function print_cons(l, b, sph, cpl, fid, m, ipl, wn)
+
+sph = sph';
+if nargin < 8, wn = 0; end
+fprintf(fid,'\n  Siphon %s', fvpr(sph,2));
+if isempty(cpl) 
+fprintf(fid,'\n  no control place needed; constraint below added to (L0, B0)');
+fprintf(fid,'\n  %s >= %d',avpr(l),b);
+elseif cpl == -1
+fprintf(fid,'\n  no constraint added');
+elseif cpl == -2
+fprintf(fid,'\n  inadmissible constraint');
+else
+fprintf(fid,'\n  place %d added to control the siphon and enforce:',cpl);
+lr = zeros(1, m); lr(ipl) = l;
+fprintf(fid,'\n  %s >= %d',avpr(lr),b);
+end
+if wn == 1, fprintf(fid,'\n  siphon control failure occured.');
+elseif wn == 2, fprintf(fid,'\n  suboptimal admissibility transformation.');
+end 
+fprintf(fid,'\n');
+
+
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+function final_print(L, B, L0, B0, status, fid, TA, T, state)
+
+% Compute Tf = T intersected with TA
+n = max([T(:); TA(:)]);
+tmp = zeros(1,n); tmp(TA) = 1; Tf = find(tmp(T));
+
+fail = grp(status, 'fail'); 
+impossible = grp(status, 'impossible'); 
+ok = grp(status,'ok');
+dptype = state.dptype; anetfail = state.anetfail; unique = state.unique; perm = state.perm;
+incon = state.incon; usfl = state.usfl; uncontro = state.uncontro;
+
+nl = sprintf('\n'); achieve = [];
+
+if dptype == 0 % DEADLOCK PREVENTION
+   if ok
+      s = 'The generated supervisor is ';
+      if perm & unique
+         s = [s, 'the least restrictive '];
+         if anetfail, s = [s, 'T-']; achieve = 'T-live'; else, achieve = 'live'; end
+         s = [s, 'liveness enforcing supervisor.'];
+         if anetfail, s = [s, nl, 'The set T is:', nl, 'T = ', listTA(TA)]; end
+      elseif perm
+         s = [s, 'guaranteed to prevent total deadlock']; achieve = 'deadlock-free';
+         if anetfail
+            s = [s, ' in the subsystem containing the transitions', nl, 'T = '];
+            s = [s, listTA(TA), 'The supervisor may not enforce T-liveness.', nl];
+            s = [s, 'The supervisor is guaranteed to be at least as permissive as the least'];
+            s = [s, nl, 'restrictive T-liveness enforcing supervisor.'];
+         else
+            s = [s, '.', nl, 'The supervisor may not enforce liveness.', nl];
+            s = [s, 'The supervisor is guaranteed to be at least as permissive as the least'];
+            s = [s, nl, 'restrictive liveness enforcing supervisor.'];
+         end
+      else
+         s = [s, 'guaranteed to prevent total deadlock']; achieve = 'deadlock-free';
+         if anetfail
+            s = [s, ' in the subsystem containing the transitions', nl, 'T = '];
+            s = [s, listTA(TA), 'The supervisor may not enforce T-liveness.', nl];
+         else
+            s = [s, '.', nl, 'The supervisor may not enforce liveness.', nl];
+         end
+      end
+   elseif impossible
+      s = 'No deadlock prevention supervisors exist.';
+      if incon & uncontro
+         s = [s, nl, 'Deadlock prevention supervisors may exist for other initial constraints.'];
+      elseif incon
+         s = [s, nl, 'Deadlock prevention supervisors exist for other initial constraints.'];
+      end
+   elseif fail
+      s = 'The procedure could not generate a deadlock prevention supervisor';
+   end
+else  % LIVENESS OR T-LIVENESS
+   if dptype == 1, supname = 'liveness'; tmp = 'live';
+   else supname = 'T-liveness'; tmp = 'T-live'; end
+   if ok,
+      s = 'The generated supervisor is ';
+      if unique & perm
+         s = [s, 'the least restrictive '];
+         if anetfail, s = [s, 'Tx-liveness']; achieve = 'Tx-live';
+         else s = [s, supname]; achieve = tmp; end
+         s = [s, ' enforcing supervisor'];
+         if anetfail, s = [s, nl, 'The set Tx is:', nl, 'Tx = ', listTA(TA)]; end
+      elseif perm
+         s = [s, 'guaranteed to enforce'];
+         if anetfail
+            s = [s, ' Tx-liveness in the subsystem containing the transitions', nl, 'Tx = '];
+            s = [s, listTA(Tf)]; achieve = 'Tx-live';
+         else
+            s = [s, supname, ', ']; achieve = tmp;
+         end
+         s = [s, 'and may not be least restrictive'];
+      end
+      if perm & ~unique
+         s = [s, nl, 'The supervisor is the least restrictive Ta-liveness '];
+         s = [s, 'enforcing supervisor for', nl, 'Ta = '];
+         s = [s, nl, listTA(TA)];
+      end
+      if state.nolive,
+         s = [s, nl, 'No liveness enforcing supervisor exists.'];
+      elseif state.noTlive
+         s = [s, nl, 'No T-liveness enforcing supervisor exists.'];
+      end
+   elseif fail
+      s = 'The procedure could not generate a liveness or T-liveness enforcing supervisor.';
+   elseif impossible
+      s = 'No liveness/Tx-liveness enforcing supervisors exist, for any nonempty Tx.';
+      s = [s, nl, 'Even deadlock prevention is impossible.'];
+   end   
+end
+
+fprintf(fid, '\n\n');
+fprintf(fid,'==============================================================================');
+fprintf(fid, '\n\n'); 
+fprintf(fid, s);
+
+if ~ok, return; end
+
+if ~dptype
+   suptype = 'deadlock-free';
+elseif dptype == 1
+   supname = 'live';
+else
+   supname = 'T-live';
+end
+
+if isempty(L) & isempty(L0)
+  fprintf(fid,'\nNo constraints are needed: the Petri net is %s for all initial\nmarkings',suptype);
+else
+  if ~isempty(L)
+    fprintf(fid, '\nThe supervisor is defined by the following constraints:');
+    fprintf(fid, '\n');
+    for i = 1:length(L(:,1))                               
+      fprintf(fid, '\n%s >= %d', avpr(L(i,:), 'm'), B(i));
+    end
+  end
+
+  if ~isempty(L0)  
+    if ~isempty(L)
+      fprintf(fid, '\n\nIn addition to the inequalities above, the initial marking "i" must satisfy:');
+    else
+      fprintf(fid,'\n\nThe target Petri net is %s for all initial markings "i" satisfying',achieve);
+    end
+    fprintf(fid, '\n');
+    for i = 1:length(L0(:,1))
+      fprintf(fid, '\n%s >= %d', avpr(L0(i,:), 'i'), B0(i));
+    end
+  end
+end
+
+if state.usfl
+  fprintf(fid, '\n\n(The redundant constraints have been eliminated.)');
+end
+
+
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+function [state] = init_state()
+
+%state.fail = 0; state.impossible = 0; state.ok = 1; % default status of the procedure
+state.dptype = 0; % default is deadlock prevention
+state.unique = 0; % 1, if in the current iteration there is a unique nonzero active subnet 
+                  % (in the deadlock prevention case), or a single Tx-minimal active subnet 
+                  % (in the T-liveness/liveness case)
+state.perm = 1;   % 0, if some siphon control failure occurs in the current run
+state.anetfail = 0; % 1, if the active subnet does not contain all transitions of the net
+                    % (DP and LE case) or all transitions of T (T-LE case)
+state.incon = 0; % 1, if initial constraints exist
+state.uncontro = 0; % 1 if uncontrollable and/or unobservable transitions exist
+state.usfl = 0; % >=1, if redundant constraints have been eliminated
+state.nolive = 0; % 1, if no liveness enforcing supervisor exists
+state.noTlive = 0; % 1, if no T-liveness enforcing supervisor exists
+
+
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+function [s] = listTA(TA)
+
+s = '{';
+if length(TA) > 1
+   for i = 1:length(TA)-1
+      s = [s, sprintf('t%d, ', TA(i))];
+   end
+end
+if length(TA) >= 1
+   s = [s, sprintf('t%d', TA(length(TA)))];
+end
+s = [s, sprintf('}\n')];
+
+
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+function asbnmessage(pcs,dptype,rn)
+
+if rn < 2, str = 'I'; 
+else, str = sprintf('Run %d, i', rn); end
+if dptype == 0 | dptype == 1
+    pcs.string = [str, 'teration 1: Computing the maximal active subnet ...'];
+elseif dptype == 2
+    pcs.string = [str, 'teration 1: Computing a T-minimal active subnet ...'];
+end
+if ishandle(pcs.hdl), set(pcs.hdl,'String',pcs.string,'Position',pcs.pos); 
+    figure(pcs.ghdl); end
+
+
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+function printmessage(str, It, rn, pcs)
+
+if It > 0,
+   if rn < 2
+      pcs.string = sprintf('Iteration %d: %s', It, str);
+   else
+       pcs.string = sprintf('Run %d, iteration %d: %s', rn, It, str);
+   end
+else
+    pcs.string = sprintf('%s', str);
+end    
+if ishandle(pcs.hdl), set(pcs.hdl,'String',pcs.string,'Position',pcs.pos); 
+    figure(pcs.ghdl); end
+
+
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+function [ics] = initcurrentstate(hdl,dptype)
+
+pos = [10,200,400,30];
+z = uicontrol(hdl,'Style','Text','Position',pos);
+if dptype == 0
+   [outstring, newpos] = textwrap(z, {'Producing a deadlock prevention supervisor ...'});
+elseif dptype == 1
+   [outstring, newpos] = textwrap(z, {'Producing a liveness enforcing supervisor ...'});
+elseif dptype == 2
+   [outstring, newpos] = textwrap(z, {'Producing a T-liveness enforcing supervisor ...'});
+end   
+pos = [10,10,400,190+newpos(4)-5];
+set(z, 'String', outstring, 'Position',pos);
+
+pos = [10,10,400,30];
+z = uicontrol(hdl,'Style','Text','Position',pos);
+[outstring, newpos] = textwrap(z, {'(Details written to dp.log and dp.dat.)'});
+pos = [pos(1:3),newpos(4)-5];
+set(z, 'String', outstring, 'Position',pos);
+
+ics.pos = [10,150,400,30];
+ics.hdl = uicontrol(hdl,'Style','Text','Position',ics.pos);
+ics.ghdl = hdl;
+
+
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+function h = xiniti(ttl)
+
+% XINITI - Initialize Text Interface
+%
+% h = initi(title)
+
+h = figure; axis off
+set(h,'Menubar','none','Name',ttl,'NumberTitle','off','HandleVisibility','off','Units','pixels');
+pos = get(h,'Position');
+pos(3) = 420; %window width
+pos(4) = 220; %window height
+set(h,'Position',pos);
+figure(h);
+
+
+% = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
