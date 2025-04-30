@@ -13,6 +13,7 @@ function ret_= login_mapi( defGrpName, pathIniOnly )
 % 02.3.2020 (handle conflict c:\windows\system32\input.dll), JG
 % 10.3.2021 (pathIniOnly), JG
 % 21.5.2022 (new ways to define work folder), JG
+% 30.4.2025 (SVN -> GIT), JG
 % 
 
 % provide defaults for the input arguments
@@ -81,7 +82,7 @@ function ret= login_commands( op, a1 )
 % usage inside : ret= login_commands('verify_group_name', 'a1')
 
 ret= '';
-dname= 'c:\users2\mapi24\'; %23\'; % working folder
+dname= 'c:\users2\mapi25\'; %24\'; %23\'; % working folder
 
 switch op
     case 'show_opt'
@@ -376,6 +377,7 @@ cd(cd0);
 
 % general utils
 if 1
+    path(path, [p '..\utils']);
 end
 
 % lab1 utils:
