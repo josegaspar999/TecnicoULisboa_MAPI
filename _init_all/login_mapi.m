@@ -36,7 +36,7 @@ end
 
 % check whether common data needs to be downloaded
 cd0= pwd;
-login_z_svnup
+login_z_update
 if strcmpi(cd0, 'c:\windows\system32')
     % new windows update 2020/March got a conflicting "input.dll"
     cd0= 'c:\';
@@ -373,6 +373,10 @@ cd(cd0);
 % path(path, [p p2]);
 
 % >> IMPORTANT: match this fn with "login_mapi_flist.m" <<
+
+% general utils
+if 1
+end
 
 % lab1 utils:
 if 1

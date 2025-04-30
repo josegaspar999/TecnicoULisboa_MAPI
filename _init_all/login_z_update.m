@@ -1,11 +1,10 @@
-function login_z_svnup
+function login_z_update
 
 % goto general folder
-f= 'login_z_svnup.m';
-p= which( f );
-p= strrep( p, f,'' );
+f= 'login_z_update.m';
+[p,~,~]= fileparts( which(f) );
 cd(p)
 cd('..')
 
-% call the svn update
-!svn update
+% call the GIT update
+!git pull
