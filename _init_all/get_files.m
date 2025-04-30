@@ -1,7 +1,7 @@
 function get_files( filesId, options )
 %
 % Given one identifier, "filesId", download and unzip a zip file
-% Check that current dir is under a disered ref
+% Check that current dir is under a desired ref
 
 % May 2023, J. Gaspar
 
