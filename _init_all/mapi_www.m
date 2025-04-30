@@ -37,10 +37,10 @@ return; % end of main function
 
 function info= get_info_list
 info= {
-    'Main  webpage', 'http://users.isr.ist.utl.pt/~jag/courses/mapi23d/mapi2324.html';
-    'Fenix webpage', 'https://fenix.tecnico.ulisboa.pt/disciplinas/MAPI3/2023-2024/2-semestre';
-    'Lab0 PDF', 'http://users.isr.ist.utl.pt/~jag/courses/mapi23d/docs/lab_guides/MAPI_LAB0_2324.pdf';
-    'Lab1 PDF', 'http://users.isr.ist.utl.pt/~jag/courses/mapi23d/docs/lab_guides/MAPI_LAB1_2324.pdf';
+    'Main  webpage', 'http://users.isr.ist.utl.pt/~jag/courses/mapi24d/mapi2425.html';
+    'Fenix webpage', 'https://fenix.tecnico.ulisboa.pt/disciplinas/MAPI36/2024-2025/2-semestre';
+    'Lab0 PDF', 'http://users.isr.ist.utl.pt/~jag/courses/mapi24d/docs/lab_guides/MAPI_LAB0_2425.pdf';
+    ... %'Lab1 PDF', 'http://users.isr.ist.utl.pt/~jag/courses/mapi23d/docs/lab_guides/MAPI_LAB1_2324.pdf';
     ... %'Lab2 PDF', 'http://users.isr.ist.utl.pt/~jag/courses/mapi23d/docs/lab_guides/MAPI_LAB2_2324.pdf';
 	... %'Lab3 PDF', 'http://users.isr.ist.utl.pt/~jag/courses/mapi23d/docs/lab_guides/MAPI_LAB3_2022.pdf';
     };
