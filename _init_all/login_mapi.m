@@ -37,7 +37,12 @@ end
 
 % check whether common data needs to be downloaded
 cd0= pwd;
-login_z_update
+% if ~login_opt('isopt', 'AutoUpdateFlag')
+%     login_opt('set', 'AutoUpdateFlag', 1);
+% end
+if login_opt('get', 'AutoUpdateFlag')
+    login_z_update
+end
 if strcmpi(cd0, 'c:\windows\system32')
     % new windows update 2020/March got a conflicting "input.dll"
     cd0= 'c:\';
@@ -179,6 +184,13 @@ switch op
             warning('zip folder is NOT set')
             ret= '';
         end
+        
+    case 'set_no_auto_update', login_opt('set', 'AutoUpdateFlag', 0);
+    case 'set_auto_update',    login_opt('set', 'AutoUpdateFlag', 1);
+    case 'show_auto_update_flag'
+        % usage: login_mapi -show_auto_update_flag
+        fprintf(1, '** state of auto update flag = %d\n', ...
+            login_opt('get', 'AutoUpdateFlag') );
 
 end
 return
@@ -187,6 +199,9 @@ return
 % --------------------------- aux fn:
 function ret= login_opt( op, a1, a2 )
 global LOPT
+if isempty(LOPT)
+    LOPT= struct('AutoUpdateFlag', 1);
+end
 switch op
     case 'isopt'
         ret= isfield(LOPT, a1);
