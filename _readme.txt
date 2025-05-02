@@ -1,7 +1,7 @@
 
 Repository for the Industrial Automation Course
 
-José Gaspar
+JosÃ© Gaspar
 
 ---------------------------------------------------
 
@@ -20,8 +20,12 @@ Navigate Matlab to the subfolder "_init_all\." and run
 Extra notes:
 ------------
 
-The repository is expected to be checked out to "c:\users2\api\".
-Consider using the freeware TortoiseGIT to do this checkout.
+The repository is expected to be checked out to "c:\users2\mapi\".
+
+If you have installed GIT in your Windows PC then run in a CMD:
+git clone https://github.com/josegaspar999/TecnicoULisboa_MAPI.git c:\users2\mapi
+
+Alternatively, consider using the freeware TortoiseGIT to do this checkout (still requires the GIT command line).
 The URL for the repository is:
 https://github.com/josegaspar999/TecnicoULisboa_MAPI.git
 
