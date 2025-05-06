@@ -8,6 +8,7 @@ function login_z_install( methodId )
 % TODO: create login_z_data.m returning a structure with relevant data
 
 % 2015.03.12, March2017 (file renamed), Oct2019 (startup.m), J.Gaspar
+% 2025.05 (disable install), J. Gaspar
 
 % define setpath method
 if nargin<1
@@ -33,11 +34,47 @@ return; % end of main function
 
 
 % ------------------------------------
+function ret= mycnf(op, a1, a2)
+global MIDP;
+if isempty(MIDP)
+    MIDP= struct('install_flag', 1, 'just_add_path', 0);
+end
+
+switch op
+    case 'set', MIDP.(a1)= a2;
+
+    case 'get'
+        if ~isfield(MIDP, a1)
+            ret= [];
+        else
+            ret= MIDP.(a1);
+        end
+        
+    otherwise
+        error('inv op "%s"', op);
+end
+
+
 function ret= mysavepath( p, methodId )
 ret= 0;
 
 if isempty(methodId)
     methodId= 2;
+end
+
+if methodId < 0
+    % special cases, work on them
+    switch methodId
+        case -1, mycnf('set', 'install_flag', 0);
+            fprintf(1, '** install flag set to 0 (NO install)\n');
+        case -2, mycnf('set', 'install_flag', 1);
+            fprintf(1, '** install flag set to 1 (TRUE)\n');
+    end
+    return
+end
+if ~mycnf('get', 'install_flag')
+    % if no install flag, then do nothing
+    return
 end
 
 switch methodId
