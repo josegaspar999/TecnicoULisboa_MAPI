@@ -52,10 +52,11 @@ if ~isempty(pathToPipe2)
     pathToPipe2= fname_correct( pathToPipe2 );
     if ~exist(pathToPipe2, 'dir')
         warning('Pipe2 seems to be not installed');
-        s1= strrep(['cd("' fname_correct(options.zipFolder) '")'],'"','''');
-        s2= [s1 '; data_download'];
+        s1= ['cd("' fname_correct(options.zipFolder) '")'];
+        s1= [s1 '; data_download_info("add_pipe2"); data_download'];
+        s1= strrep(s1,'"','''');
         fprintf(1, '-- Suggestion, try the following:\n\n');
-        disp(s2)
+        disp(s1)
         fprintf(1, '\n');
     end
 end
