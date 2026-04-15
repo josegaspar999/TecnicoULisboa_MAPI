@@ -4,67 +4,82 @@ function login_mapi_grupos
 %  -----------
 %
 % Group A1
-% 102755	Filipe Cruz
-% 103515	António Oliveira
-% 103520	André Marrazes
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 %
 % Group A2
-% 96371	Diogo Mourinho
-% 100065	Pedro Serradas
-% 103754	Diana Coelho
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 %
 % Group A3
-% 102777	Bernardo Costa
-% 113289	Miguel Ferreira
-% 113311	Tiago Couto
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 %
 % Group A4
-% 102963	Renato Simoes
-% 103423	João Gouveia
-% 103765	Rafaela Pereira
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 %
 % Group A5
-% 70034	António Mariano
-% 103098	Alexandre Leal
-% 103291	Guilherme Fustiga
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 %
 % Group A6
-% 112232	Gonçalo Carvalho
-% 112242	Guilherme Pires
-% 113212	Diogo Martins
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 %
 % Group A7
-% 96192	Diogo Nunes
-% 99971	João Lopes
-% 103384	João Zenário
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 %
 % Group A8
-% 93064	Francisco Vasconcelos
-% 99926	Duarte Gomes
-% 102644	Catarina Caramalho
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 %
 % Group B1
-% 102446	Tomás Corral
-% 102985	Carlos Santos
-% 103238	Tiago Dias
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 %
 % Group B2
-% 102892	João Silveira
-% 103133	David Peixoto
-% 103318	Gonçalo Baião
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 %
 % Group B3
-% 102952	Francisco Sousa
-% 103870	Gonçalo Teixeira
-% 112607	Saman Maneshian
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 %
 % Group B4
-% 96315	Rui Santos
-% 112174	João Lopes
-% 113253	Rodrigo Luís
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 %
 % Group B5
-% 99808	Martim Pombas
-% 102815	Afonso Cruz
-% 103076	Miguel Roça
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
+%
+% Group B6
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
+%
+% Group B7
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
+%
+% Group B8
+% 12345 Name Surname
+% 12345 Name Surname
+% 12345 Name Surname
 % 

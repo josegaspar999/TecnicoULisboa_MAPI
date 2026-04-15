@@ -101,6 +101,7 @@ function goto_subdir_given_date()
 
 if now > datenum( 2023, 8, 1, 00, 00, 00 )
     % an end date to avoid going further than current period
+	% (at this time, April 2026, none of the next cases will run)
     return
 elseif now > datenum( 2023, 06, 25, 00, 00, 00 )
     cd('train2_PN_to_PLC')

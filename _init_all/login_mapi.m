@@ -87,7 +87,7 @@ function ret= login_commands( op, a1 )
 % usage inside : ret= login_commands('verify_group_name', 'a1')
 
 ret= '';
-dname= 'c:\users2\mapi25\'; %24\'; %23\'; % working folder
+dname= 'c:\users2\mapi26\'; %25\'; %24\'; %23\'; % working folder
 
 switch op
     case 'show_opt'
