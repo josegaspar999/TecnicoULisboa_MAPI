@@ -1,7 +1,7 @@
 
 Repository for the Industrial Automation Course
 
-José Gaspar
+Jose Gaspar
 
 ---------------------------------------------------
 

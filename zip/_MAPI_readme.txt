@@ -5,18 +5,23 @@ Jose Gaspar
 
 -------------------------------------
 
+-- Usage required every time Matlab is restarted
 
---- Folder names explained:
+In Matlab run
+>> login_mapi
 
-The SVN contains general files and code to give separate folders for each group.
-The SVN location is typically "c:\users2\mapi"
+
+--- Folder names explained, including the GIT repository:
+
+The GIT local path is typically "c:\users2\mapi"
+The GIT contains general files and code to give separate folders for each group.
 
 Each group has a folder named A1..C8.
 The typical location of the group folder is "c:\users2\mapiNN\GG"
    where NN is the year and GG is the group name (A1..C8)
 ** Place all your files Unity Pro, Matlab, etc, in the folder of your lab group. **
 The group folder contains lab* subfolders.
-lab01 and lab02 are subfolders for preliminary works.
+lab0 is a subfolder for the preliminary work.
 lab1 and lab2 are subfolders for projects 1 and 2.
 
 
