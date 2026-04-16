@@ -34,7 +34,7 @@ Please go to, and work on, the subfolder corresponding to the current laboratory
 
 --- Installing Petri nets graphical editor, PIPE2:
 
-Change the current working folder of Matlab to the folder containing this readme file,
-and run:
->> data_download
-
+Run in Matlab:
+cd2file data_download_info.m
+data_download_info add_pipe2
+data_download

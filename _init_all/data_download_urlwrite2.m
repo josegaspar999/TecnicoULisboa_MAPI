@@ -31,8 +31,12 @@ end
 
 % file still to download, or re-download if it was not a zip file
 [p,f,e]= fileparts( ofname );
-str= ['curl --output "' f e '" --ssl-no-revoke --url ' url];
-cd0= cd; cd(p)
+str= ['curl -L --output "' f e '" --ssl-no-revoke --url ' url];
+cd0= cd;
+if ~exist(p, 'dir')
+    mkdir(p);
+end
+cd(p)
 try
     %[status, cmdout]= system(str);
     [~, ~]= system(str);
@@ -41,13 +45,16 @@ end
 cd(cd0);
 % status, cmdout
 
-% check the file to see if it is a zip
-[zipFileFlag, url2]= check_zip_file( url, ofname );
-if ~zipFileFlag
-    % recursive calling to try again changing to a new (given) url...
-    fprintf(1, 'New URL: %s\n', url2);
-    data_curl_zip( url2, ofname, nTries );
+% in case of .zip in ofname, check the file to see if it is a zip
+if length(ofname)>4 && strcmpi(ofname(end-3:end), '.zip')
+    [zipFileFlag, url2]= check_zip_file( url, ofname );
+    if ~zipFileFlag
+        % recursive calling to try again changing to a new (given) url...
+        fprintf(1, 'New URL: %s\n', url2);
+        data_curl_zip( url2, ofname, nTries );
+    end
 end
+
 return
 
 

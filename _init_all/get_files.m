@@ -3,7 +3,9 @@ function get_files( filesId, options )
 % Given one identifier, "filesId", download and unzip a zip file
 % Check that current dir is under a desired ref
 
-% May 2023, J. Gaspar
+% x= {'empty', 'logger', 'timers', 'mix_io_and_show_strings', 'blink_on_off_and_pause'}
+ 
+% May 2023, Apr26 (URLs fix), J. Gaspar
 
 if nargin<2
     options= [];
@@ -17,31 +19,31 @@ switch filesId
     case 'empty'
         % usage: get_files empty
         % usage: get_files('empty', struct('verifCurrDir',0) )
-        url= 'http://users.isr.ist.utl.pt/~jag/course_utils/UnityPro/empty.zip';
+        url= 'https://web.tecnico.ulisboa.pt/~ist13495/course_utils/UnityPro/empty.zip';
         ofname= './empty.zip';
 
     case 'logger'
         % usage: get_files logger
         % usage: get_files('logger', struct('verifCurrDir',0) )
-        url= 'http://users.isr.ist.utl.pt/~jag/course_utils/plc_log/data_log_up13.zip';
+        url= 'https://web.tecnico.ulisboa.pt/~ist13495/course_utils/plc_log/data_log_up13.zip';
         ofname= './data_log_up13.zip';
 
     case 'timers'
         % usage: get_files timers
         % usage: get_files('timers', struct('verifCurrDir',0) )
-        url= 'http://users.isr.ist.utl.pt/~jag/course_utils/UnityPro/timers_LD_ST.zip';
+        url= 'https://web.tecnico.ulisboa.pt/~ist13495/course_utils/UnityPro/timers_LD_ST.zip';
         ofname= './timers_LD_ST.zip';
         
     case {3, 'mix_io_and_show_strings'}
         % usage: get_files mix_io_and_show_strings
         % usage: get_files(3, struct('verifCurrDir',0) )
-        url= 'http://users.isr.ist.utl.pt/~jag/course_utils/plc_log/mix_io_show_strings.zip';
+        url= 'https://web.tecnico.ulisboa.pt/~ist13495/course_utils/plc_log/mix_io_show_strings.zip';
         ofname= './mix_io_show_strings.zip';
         
     case 'blink_on_off_and_pause'
         % usage: get_files blink_on_off_and_pause
         % usage: get_files('blink_on_off_and_pause', struct('verifCurrDir',0) )
-        url= 'http://users.isr.ist.utl.pt/~jag/course_utils/UnityPro/blink_on_off_and_pause.zip';
+        url= 'https://web.tecnico.ulisboa.pt/~ist13495/course_utils/UnityPro/blink_on_off_and_pause.zip';
         ofname= './blink_on_off_and_pause.zip';
 
     otherwise
