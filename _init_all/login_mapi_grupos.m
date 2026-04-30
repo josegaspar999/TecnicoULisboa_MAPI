@@ -4,82 +4,63 @@ function login_mapi_grupos
 %  -----------
 %
 % Group A1
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
+% 106080 Margarida Filipa Tomás Canas
+% 106611 Tiago Francisco Fernandes Cabral Ramos Gomes
+% 107113 Beatriz Heleno Coelho
 %
 % Group A2
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
+% 105885 Miguel Nunes Alves Liñan da Silva
+% 106963 Rodrigo Afonso da Silva Caldeira
+% 107138 Francisco da Silva e Freitas Jesus
 %
 % Group A3
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
+% 105932 Marco Gonzaga Abala Matos
+% 105944 Tomás Costa Modesto
+% 106175 André Fonseca Soares Salvaterra
 %
 % Group A4
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
+% 106429 André Silvestre Pragosa
+% 106598 Joao Mamede Martinho
+% 117387 Tiago Filipe Lopes Fontes
 %
 % Group A5
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
+% 99955 Henrique Miguel Aviz de Brito Gaspar João
+% 100479 Lucas Miguel Pires Ribeiro
+% 102774 André José Diniz Carvalho
 %
 % Group A6
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
+% 106021 Tiago Reis Lopes Guerreiro Gonçalves
+% 106231 Miguel Lopes Pinto Martins
 %
 % Group A7
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
-%
-% Group A8
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
+% 102632 Diogo Alexandre de Sousa da Costa
+% 106310 Tomas Aleksandr Cláudio
+% 116171 Nuno Filipe dos Santos Cordeiro
 %
 % Group B1
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
+% 102109 Henrique Miranda Póvoa
+% 106541 David João Marafuz Gaspar
+% 106626 Pedro Gaspar Mónico
 %
 % Group B2
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
+% 90028 Beatriz Brito Melim
+% 93138 Miguel Alexandre Martins Almeida Rocha
+% 102792 Mariana Madeira Cal
 %
 % Group B3
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
+% 99162 Miguel Tomás Valente Brás Simões
+% 119621 Benjamin Rybnikár
+% 119622 Andrej Šuvada
 %
 % Group B4
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
+% 103281 Diogo Guardalino Penetra Dantas Ferreira
+% 116048 Emílio Rafael Chinene Mendes
+% 116057 Gonçalo Santos Alves
 %
 % Group B5
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
+% 88176 Pedro Mendes da Silva Réquio
+% 109234 João Miguel Isidro Galego
+% 119379 Victor Jean Alain Cabanné
 %
-% Group B6
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
-%
-% Group B7
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
-%
-% Group B8
-% 12345 Name Surname
-% 12345 Name Surname
-% 12345 Name Surname
-% 
+
+
